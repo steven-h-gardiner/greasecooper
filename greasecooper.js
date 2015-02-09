@@ -3,12 +3,13 @@
 var greasecooper = function() {
   var privy = {};
   privy.mods = {};
-  privy.mods.nomnom = require('nomnom');
   privy.mods.cp = require('child_process');
-  privy.mods.luigi = require('luigi');
   privy.mods.url = require('url');
-  privy.mods.temp = require('temp');
 
+  privy.mods.temp = require('temp');
+  privy.mods.eachline = require('eachline');
+  privy.mods.nomnom = require('nomnom');
+      
   privy.src = {};
   privy.src.bootstrap = require.resolve('./bootstrap.js');
   privy.src.meta = require.resolve('./meta.xsl');
@@ -175,12 +176,13 @@ var greasecooper = function() {
                             'tee /tmp/greasecooper_userscripts_grep.txt',
                             ].join(" | ")]);
 
-    self.procs.filt = new privy.mods.luigi.filter();
-    self.procs.filt.meta = {};
-    self.procs.filt.meta.state = "out";
-    self.procs.filt.on('line', function(line) {
+    //self.procs.filt = new privy.mods.luigi.filter();
+    self.procs.filt = new privy.mods.eachline(function(line) {
       var that = this;
       var info = {};
+
+      var output = [];  
+        
       info.parts = line.split(/\.user\.js:/);
       info.filepath = info.parts[0] + ".user.js";
       info.fileline = info.parts.slice(1).join('.user.js:');
@@ -199,24 +201,24 @@ var greasecooper = function() {
           this.meta.multi.exclude = [];
           this.meta.multi.require = [];
           this.meta.multi.resource = [];
-          this.output.write("/UserScriptConfig/Script\n");
-          this.output.write("/UserScriptConfig/Script/@enabled=true\n");
-          this.output.write(["/UserScriptConfig/Script/@filename=",
+          output.push("/UserScriptConfig/Script\n");
+          output.push("/UserScriptConfig/Script/@enabled=true\n");
+          output.push(["/UserScriptConfig/Script/@filename=",
                              info.filename,
                              "\n"].join(""));
-          this.output.write(["/UserScriptConfig/Script/@installTime=",
+          output.push(["/UserScriptConfig/Script/@installTime=",
                              self.now.getTime(),
                              "\n"].join(""));
-          this.output.write(["/UserScriptConfig/Script/@modified=",
+          output.push(["/UserScriptConfig/Script/@modified=",
                              self.now.getTime(),
                              "\n"].join(""));
-          this.output.write(["/UserScriptConfig/Script/@installurl=",
+          output.push(["/UserScriptConfig/Script/@installurl=",
                              info.baseurl,
                              "\n"].join(""));
-          this.output.write(["/UserScriptConfig/Script/@updateurl=",
+          output.push(["/UserScriptConfig/Script/@updateurl=",
                              info.baseurl,
                              "\n"].join(""));
-          this.output.write("/UserScriptConfig/Script/@checkRemoteUpdates=0\n");
+          output.push("/UserScriptConfig/Script/@checkRemoteUpdates=0\n");
         }
       }
       if (this.meta.state === 'in') {
@@ -242,7 +244,7 @@ var greasecooper = function() {
               break;
             case "name":
               this.meta.info.basedir = info.ival.replace(/\s/g, '_');
-              this.output.write(["/UserScriptConfig/Script/@",
+              output.push(["/UserScriptConfig/Script/@",
                                  "basedir",
                                  '=',
                                  this.meta.info.basedir,
@@ -258,7 +260,7 @@ var greasecooper = function() {
                 tmpdir: cSpec.tmpdir,    
               });
             default:
-              this.output.write(["/UserScriptConfig/Script/@",
+              output.push(["/UserScriptConfig/Script/@",
                                  info.ikey,
                                  '=',
                                  info.ival,
@@ -277,25 +279,25 @@ var greasecooper = function() {
 
             var ix = 0;
             this.meta.multi[multikey].forEach(function(vals) {
-              that.output.write("/UserScriptConfig/Script/!=sep\n");
+              output.push("/UserScriptConfig/Script/!=sep\n");
 
               switch (multikey) {
                 case "resource":
                   var rezname = vals[0];
-                  that.output.write(["/UserScriptConfig/Script/",
-                                     eltname,
-                                     '/@name=',
-                                     rezname,
-                                     "\n"
-                                     ].join(""));
+                  output.push(["/UserScriptConfig/Script/",
+                               eltname,
+                               '/@name=',
+                               rezname,
+                               "\n"
+                              ].join(""));
                 case "require":
                   var filename = vals.slice(-1)[0].split(/\//).pop();
-                  that.output.write(["/UserScriptConfig/Script/",
-                                     eltname,
-                                     '/@filename=',
-                                     filename,
-                                     "\n"
-                                     ].join(""));
+                  output.push(["/UserScriptConfig/Script/",
+                               eltname,
+                               '/@filename=',
+                               filename,
+                               "\n"
+                              ].join(""));
                   self.eq.emit('download_resource', {
                     location: vals.slice(-1)[0],
                     filename: filename,
@@ -307,24 +309,28 @@ var greasecooper = function() {
                   });
                   break;
                 default: 
-                  that.output.write(["/UserScriptConfig/Script/",
-                                     eltname,
-                                     '=',
-                                     vals.join(""),
-                                     "\n"
-                                     ].join(""));
+                  output.push(["/UserScriptConfig/Script/",
+                               eltname,
+                               '=',
+                               vals.join(""),
+                               "\n"
+                              ].join(""));
               }
               ix++;
             });
           }
-          
+                      
           this.meta.state = 'out';
         }
       }
 
       info.meta = this.meta;
       console.error(JSON.stringify(info));
+
+      return output.join("");  
     });
+    self.procs.filt.meta = {};
+    self.procs.filt.meta.state = "out";
 
     self.procs.writexml =
       privy.mods.cp.spawn('bash', ['-c',
@@ -337,10 +343,10 @@ var greasecooper = function() {
                           cwd: [cSpec.tmpdir, cSpec.opts.scriptdir].join("/"),
                           });
     
-    self.procs.find.stdout.pipe(self.procs.filt.stdin);
+    self.procs.find.stdout.pipe(self.procs.filt);
     self.procs.find.stderr.pipe(process.stderr);
 
-    self.procs.filt.stdout.pipe(self.procs.writexml.stdin);
+    self.procs.filt.pipe(self.procs.writexml.stdin);
 
     self.procs.writexml.stdout.pipe(process.stdout);
     self.procs.writexml.stderr.pipe(process.stderr);
