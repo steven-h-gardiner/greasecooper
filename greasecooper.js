@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-
-
 var greasecooper = function() {
   var privy = {};
   privy.mods = {};
@@ -59,12 +57,13 @@ var greasecooper = function() {
     if (dSpec.opts.paths.length === 0) {
       dSpec.opts.paths = ['./scripts'];
     }
-    console.error("OPTS: %j", dSpec.opts);
 
-    dSpec.opts.outbase = dSpec.opts.output.split(/\./).slice(0,-1).join(".");
+    dSpec.opts.outbase = dSpec.opts.output.split(/\//).slice(-1).join("/").split(/\./).slice(0,-1).join(".");
     dSpec.opts.scriptdir = [dSpec.opts.outbase,'scripts'].join("-");
     dSpec.opts.scriptxpi = [dSpec.opts.scriptdir,'xpi'].join(".");
 
+    console.error("OPTS: %j", dSpec.opts);
+      
     if (dSpec.opts.cleanup) {
       privy.mods.temp.track();
     }
