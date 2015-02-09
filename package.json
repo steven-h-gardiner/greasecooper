@@ -1,0 +1,11 @@
+{
+  "name": "greasecooper",
+  "bin": {
+    "greasecooper": "./greasecooper.js"
+  },
+  "dependencies": {
+    "nomnom": "*",
+    "temp": "*"
+  },
+  "version": "0.0.1"  
+}
