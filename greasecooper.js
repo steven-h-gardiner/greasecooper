@@ -404,15 +404,15 @@ var greasecooper = function() {
                                      ['..',pSpec.opts.scriptxpi].join("/"),
                                      ')'
                                      ].join(" "),
-                                    ['jar cvf ',
-                                     [process.cwd(),pSpec.opts.output].join("/"),
+                                    ['( cd', process.cwd(), ';', 'realpath', pSpec.opts.output, ')', '|',
+                                     'parallel jar cvf {}',
                                      ' greasemonkey.xpi ',
                                      pSpec.opts.scriptxpi,
                                      'install.rdf'
                                      ].join(" "),
                                     ].join(" ; ")], {
-                          cwd: pSpec.tmpdir
-                              });
+				      cwd: pSpec.tmpdir
+				    });
 
     self.procs.bpack.stdout.pipe(process.stdout);
     self.procs.bpack.stderr.pipe(process.stderr);
