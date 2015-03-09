@@ -3,6 +3,9 @@
   "bin": {
     "greasecooper": "./greasecooper.js"
   },
+  "scripts": {
+    "preinstall": "bash ./scripts/check_executables.sh"
+  },
   "dependencies": {
     "nomnom": "*",
     "eachline": "*",
