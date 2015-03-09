@@ -167,7 +167,7 @@ var greasecooper = function() {
                            [['find'].concat(
                                            rSpec.opts.paths).concat([
                                                    '-type', 'f',
-                                                   '-name', '*.user.js',
+                                                   '-name', '\\*.user.js',
                                                                      ]).join(" "),
                             'tee /tmp/greasecooper_userscripts_rel.txt',
                             'parallel realpath {}',
