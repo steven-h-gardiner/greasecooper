@@ -64,7 +64,7 @@ var greasecooper = function() {
     dSpec.opts.scriptdir = [dSpec.opts.outbase,'scripts'].join("-");
     dSpec.opts.scriptxpi = [dSpec.opts.scriptdir,'xpi'].join(".");
 
-    dSpec.opts.absout = privy.mods.path.resolve('.', dSpec.output);
+    dSpec.opts.absout = privy.mods.path.resolve('.', dSpec.opts.output);
     
     console.error("OPTS: %j", dSpec.opts);
       
