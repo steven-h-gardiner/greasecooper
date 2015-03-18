@@ -175,12 +175,10 @@ var greasecooper = function() {
                             'tee /tmp/greasecooper_userscripts_rel.txt'
 			    ].join(" | ")]);
 
-    self.procs.resolve =
-      privy.mods.cp.spawn('bash',
-			  ['-c',			   
-                           ['parallel realpath {}',
-                            ].join(" | ")]);
-
+    self.procs.resolve = new privy.mods.eachline(function(line) {
+      return privy.mods.path.resolve('.', line);
+    });
+      
     self.procs.cat =
       privy.mods.cp.spawn('bash',
 			  ['-c',
@@ -356,11 +354,11 @@ var greasecooper = function() {
                           cwd: [cSpec.tmpdir, cSpec.opts.scriptdir].join("/"),
                           });
     
-    self.procs.find.stdout.pipe(self.procs.resolve.stdin);
+    self.procs.find.stdout.pipe(self.procs.resolve);
     self.procs.find.stderr.pipe(process.stderr);
 
-    self.procs.resolve.stdout.pipe(self.procs.cat.stdin);
-    self.procs.resolve.stderr.pipe(process.stderr);
+    self.procs.resolve.pipe(self.procs.cat.stdin);
+    //self.procs.resolve.stderr.pipe(process.stderr);
 
     self.procs.cat.stdout.pipe(self.procs.filt);
     self.procs.cat.stderr.pipe(process.stderr);
