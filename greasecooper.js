@@ -172,10 +172,20 @@ var greasecooper = function() {
                                                    '-type', 'f',
                                                    '-name', '\\*.user.js',
                                                                      ]).join(" "),
-                            'tee /tmp/greasecooper_userscripts_rel.txt',
-                            'parallel realpath {}',
+                            'tee /tmp/greasecooper_userscripts_rel.txt'
+			    ].join(" | ")]);
+
+    self.procs.resolve =
+      privy.mods.cp.spawn('bash',
+			  ['-c',			   
+                           ['parallel realpath {}',
                             'tee /tmp/greasecooper_userscripts_abs.txt',
-                            'parallel grep -H . {}',
+			    ].join(" | ")]);
+
+    self.procs.cat =
+      privy.mods.cp.spawn('bash',
+			  ['-c',
+			   ['parallel grep -H . {}',
                             'tee /tmp/greasecooper_userscripts_grep.txt',
                             ].join(" | ")]);
 
@@ -346,8 +356,14 @@ var greasecooper = function() {
                           cwd: [cSpec.tmpdir, cSpec.opts.scriptdir].join("/"),
                           });
     
-    self.procs.find.stdout.pipe(self.procs.filt);
+    self.procs.find.stdout.pipe(self.procs.resolve.stdin);
     self.procs.find.stderr.pipe(process.stderr);
+
+    self.procs.resolve.stdout.pipe(self.procs.cat.stdin);
+    self.procs.resolve.stderr.pipe(process.stderr);
+
+    self.procs.cat.stdout.pipe(self.procs.filt);
+    self.procs.cat.stderr.pipe(process.stderr);
 
     self.procs.filt.pipe(self.procs.writexml.stdin);
 
