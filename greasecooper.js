@@ -178,7 +178,7 @@ var greasecooper = function() {
     self.procs.resolve = new privy.mods.eachline(function(line) {
       var out = privy.mods.path.resolve('.', line);
       console.error("RESOLVE %j", {from:line, to: out});
-      return out;
+      return out + "\n";
     });
       
     self.procs.cat =
