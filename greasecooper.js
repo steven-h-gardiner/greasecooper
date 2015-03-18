@@ -5,7 +5,8 @@ var greasecooper = function() {
   privy.mods = {};
   privy.mods.cp = require('child_process');
   privy.mods.url = require('url');
-
+  privy.mods.path = require('path');
+    
   privy.mods.temp = require('temp');
   privy.mods.eachline = require('eachline');
   privy.mods.nomnom = require('nomnom');
@@ -63,6 +64,8 @@ var greasecooper = function() {
     dSpec.opts.scriptdir = [dSpec.opts.outbase,'scripts'].join("-");
     dSpec.opts.scriptxpi = [dSpec.opts.scriptdir,'xpi'].join(".");
 
+    dSpec.opts.absout = privy.mods.path.resolve('.', dSpec.output);
+    
     console.error("OPTS: %j", dSpec.opts);
       
     if (dSpec.opts.cleanup) {
@@ -404,7 +407,7 @@ var greasecooper = function() {
                                      ['..',pSpec.opts.scriptxpi].join("/"),
                                      ')'
                                      ].join(" "),
-                                    ['( cd', process.cwd(), ';', 'realpath', pSpec.opts.output, ')', '|',
+                                    ['echo', pSpec.opts.absout, '|',
                                      'parallel jar cvf {}',
                                      ' greasemonkey.xpi ',
                                      pSpec.opts.scriptxpi,
