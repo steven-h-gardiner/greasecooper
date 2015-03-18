@@ -179,13 +179,13 @@ var greasecooper = function() {
       privy.mods.cp.spawn('bash',
 			  ['-c',			   
                            ['parallel realpath {}',
-                            'tee /tmp/greasecooper_userscripts_abs.txt',
-			    ].join(" | ")]);
+                            ].join(" | ")]);
 
     self.procs.cat =
       privy.mods.cp.spawn('bash',
 			  ['-c',
-			   ['parallel grep -H . {}',
+			   ['tee /tmp/greasecooper_userscripts_abs.txt',
+			    'parallel grep -H . {}',
                             'tee /tmp/greasecooper_userscripts_grep.txt',
                             ].join(" | ")]);
 
